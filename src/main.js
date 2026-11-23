@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { inject } from '@vercel/analytics';
 import { World, RIVER_HALF, CHUNK, ghatInfo, BRIDGE_Z, BRIDGE_EVERY, AHSAN_Z, bridgeName } from './world.js';
 import { makePlayerBoat, makeNouka, makeLaunch, makePolice, makeHyacinth, makeTrash, makeFood, textSprite, FONT } from './models.js';
 import * as T from './text.js';
@@ -1037,6 +1038,7 @@ function frame(now) {
 
 // ফন্ট লোড হওয়ার পর শুরু (ক্যানভাসে বাংলা লেখার জন্য)
 async function boot() {
+  inject(); // Vercel Web Analytics
   initInput();
   updateMute();
   try {
