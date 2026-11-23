@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#3e2723" />
+    <meta name="description" content="মাঝির রাস্তা — বুড়িগঙ্গায় নৌকা চালান, যাত্রী নামান, লঞ্চ থিকা জান বাঁচান! সদরঘাট থিকা বাবুবাজার।" />
+    <title>মাঝির রাস্তা</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚣</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <!-- খেলার সময় উপরের তথ্য -->
+    <div id="hud" class="hidden">
+      <div class="hud-left">
+        <div class="stat money"><span class="lbl">আয়</span><span id="h-money">৳০</span></div>
+        <div class="stat damage"><span class="lbl">নদীর ক্ষতি</span><span id="h-damage">৳০</span></div>
+        <div class="bars">
+          <div class="bar"><span>নৌকা</span><i><b id="h-hull"></b></i></div>
+          <div class="bar"><span>দম</span><i><b id="h-stamina"></b></i></div>
+        </div>
+      </div>
+      <div class="hud-right">
+        <div id="h-stars" class="stars"></div>
+        <div class="stat small"><span class="lbl">দূরত্ব</span><span id="h-dist">০ মি</span></div>
+        <div id="h-buffs" class="buffs"></div>
+        <button id="btn-mute" class="icon-btn" aria-label="শব্দ">🔊</button>
+        <button id="btn-pause" class="icon-btn" aria-label="থামান">⏸</button>
+      </div>
+      <div id="passenger-panel" class="hidden">
+        <span id="pp-icon">🤵</span>
+        <div>
+          <div id="pp-dest">গন্তব্য</div>
+          <div class="timer"><b id="pp-timer"></b></div>
+        </div>
+        <span id="pp-fare">৳০</span>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+    <div id="bubble" class="hidden"><span id="bubble-icon"></span><div><b id="bubble-name"></b><p id="bubble-text"></p></div></div>
+    <div id="dir-arrow" class="hidden">➤</div>
+
+    <!-- ভাড়া দরাদরি -->
+    <div id="haggle" class="hidden">
+      <div class="hg-head"><span id="hg-icon">🤵</span><b id="hg-name"></b></div>
+      <p id="hg-text"></p>
+      <div class="hg-offer">ভাড়া দিবো: <b id="hg-offer"></b></div>
+      <div class="hg-btns">
+        <button id="hg-accept"><kbd>১</kbd> <span id="hg-accept-t">চলেন, উঠেন!</span></button>
+        <button id="hg-counter"><kbd>২</kbd> <span id="hg-counter-t">আরো দেন!</span></button>
+      </div>
+      <div class="hg-time"><b id="hg-time"></b></div>
+    </div>
+
+    <!-- মোবাইলের বাটন -->
+    <div id="touch" class="hidden">
+      <div class="tleft">
+        <button data-key="left" aria-label="বামে">◀</button>
+        <button data-key="right" aria-label="ডানে">▶</button>
+      </div>
+      <div class="tright">
+        <button data-key="horn" class="small" aria-label="হর্ন">📯</button>
+        <button data-key="boost" class="boost" aria-label="বুস্ট">⚡</button>
+        <div class="col">
+          <button data-key="up" aria-label="সামনে">▲</button>
+          <button data-key="down" aria-label="পিছে">▼</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- শুরুর পর্দা -->
+    <div id="start" class="screen">
+      <div class="card">
+        <div class="boat-emoji">🚣</div>
+        <h1>মাঝির রাস্তা</h1>
+        <p class="tag">সদরঘাট থিকা বাবুবাজার — বুড়িগঙ্গার আসল মাঝি হন!</p>
+        <ul class="howto">
+          <li>যাত্রী তুলেন <b class="y">হলুদ</b> ঘাট থিকা, নামান <b class="g">সবুজ</b> ঘাটে</li>
+          <li>লঞ্চের গায়ে লাগলেই খেল খতম!</li>
+          <li>ধাক্কাধাক্কি বেশি করলে নৌ-পুলিশ দৌড়ানি দিবো</li>
+          <li>☕ চা = দম &nbsp; 🥯 বাকরখানি = ঢাল &nbsp; 🥛 লাচ্ছি = স্পিড &nbsp; 🍛 বিরিয়ানি = ডাবল ভাড়া</li>
+        </ul>
+        <div class="keys pc-only">
+          <span><kbd>W A S D</kbd>/<kbd>← ↑ → ↓</kbd> চালান</span>
+          <span><kbd>Space</kbd> বুস্ট</span>
+          <span><kbd>H</kbd> হর্ন</span>
+          <span><kbd>P</kbd> থামান</span>
+        </div>
+        <button id="btn-start" class="big">বৈঠা ধরেন! 🚣</button>
+        <p id="best" class="best"></p>
+        <p id="tip" class="tip"></p>
+      </div>
+    </div>
+
+    <div id="pause" class="screen hidden">
+      <div class="card">
+        <h2>একটু জিরাইয়া লন ☕</h2>
+        <button id="btn-resume" class="big">আবার চালান</button>
+        <button id="btn-quit" class="ghost">খেলা ছাইড়া দেন</button>
+      </div>
+    </div>
+
+    <!-- খেলা শেষ: পত্রিকা -->
+    <div id="gameover" class="screen hidden">
+      <div class="paper">
+        <div class="masthead">
+          <div class="mh-top"><span id="np-date"></span><span>দাম: ৳৫</span></div>
+          <h2>দৈনিক বুড়িগঙ্গা বার্তা</h2>
+          <div class="mh-bot">সদরঘাটের সবচাইতে বেশি বিক্রিত (ঠোঙা বানানোর জন্য) পত্রিকা</div>
+        </div>
+        <h1 id="np-headline"></h1>
+        <p id="np-sub" class="np-sub"></p>
+        <div class="np-cols">
+          <div class="np-photo"><span id="np-photo">🚣💥🚢</span><small>ছবি: ঘাটের এক উৎসুক জনতা</small></div>
+          <div class="np-stats">
+            <div><span>মোট আয়</span><b id="np-money"></b></div>
+            <div><span>নদীর ক্ষতি</span><b id="np-damage" class="red"></b></div>
+            <div><span>যাত্রী পৌঁছাইছেন</span><b id="np-pass"></b></div>
+            <div><span>ময়লা তুলছেন</span><b id="np-trash"></b></div>
+            <div><span>দূরত্ব</span><b id="np-dist"></b></div>
+          </div>
+        </div>
+        <div class="np-box">
+          <b>ক্ষতির টাকায় যা যা কিনা যাইতো:</b>
+          <p id="np-equiv"></p>
+        </div>
+        <p id="np-line" class="np-line"></p>
+        <p id="np-best" class="np-best"></p>
+        <div class="np-btns">
+          <button id="btn-again" class="big">আবার খেলুম! 🚣</button>
+          <button id="btn-share" class="ghost">শেয়ার করেন</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
